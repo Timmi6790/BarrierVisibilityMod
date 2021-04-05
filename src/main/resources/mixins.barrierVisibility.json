@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "refmap": "mixins.barrierVisibility.refmap.json",
+  "package": "de.timmi6790.barrier.mixins",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "blocks.MixinBlockBarrier"
+  ]
+}

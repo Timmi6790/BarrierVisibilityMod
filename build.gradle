@@ -1,0 +1,124 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        maven { url = 'https://jitpack.io' }
+    }
+
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+    }
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven { url = 'https://repo.spongepowered.org/maven/' }
+    maven { url = 'https://jitpack.io' }
+}
+
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'org.spongepowered.mixin'
+
+version = '1.0.0'
+group = 'de.timmi6790.barrier'
+archivesBaseName = 'BarrierVisibility'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+compileJava.options.encoding = 'UTF-8'
+
+dependencies {
+    // Enabled me only for build
+    annotationProcessor 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
+    compile('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+        // Mixin includes a lot of dependencies that are too up-to-date
+        exclude module: 'guava'
+        exclude module: 'gson'
+        exclude module: 'commons-io'
+        exclude module: 'log4j-core'
+    }
+
+    compileOnly 'org.projectlombok:lombok:1.18.18'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+}
+
+minecraft {
+    version = '1.8.9-11.15.1.2318-1.8.9'
+    runDir = 'run'
+    mappings = 'stable_22'
+}
+
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', project.minecraft.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version': project.version,
+                'mcversion': project.minecraft.version
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+
+    rename '(.+_at.cfg)', 'META-INF/$1'
+}
+
+mixin {
+    defaultObfuscationEnv searge
+    add sourceSets.main, "mixins.barrierVisibility.refmap.json"
+}
+
+reobf {
+    shadowJar {
+        mappingType = 'searge'
+    }
+}
+
+configurations {
+    embed
+    compile.extendsFrom(embed)
+}
+
+jar {
+    configurations.embed.each { dep ->
+        from(project.zipTree(dep)) {
+            exclude "META-INF", "META-INF/**"
+        }
+
+        from(project.zipTree(dep)) {
+            include "META-INF/services", "META-INF/services/"
+        }
+    }
+
+    manifest.attributes(
+            'MixinConfigs': 'mixins.barrierVisibility.json',
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+            'FMLCorePluginContainsFMLMod': "true",
+            'ForceLoadAsMod': 'true',
+            'FMLCorePlugin': 'de.timmi6790.barrier.mixins.MixinLoader'
+    )
+}
+
+shadowJar {
+    dependencies {
+        exclude(dependency('org.checkerframework:checker-qual:.*'))
+        exclude(dependency('com.google.errorprone:error_prone_annotations:.*'))
+    }
+    classifier ''
+    exclude 'LICENSE.txt', 'dummyThing'
+}
+
+artifacts {
+    archives jar
+    archives shadowJar
+}

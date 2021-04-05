@@ -1,0 +1,17 @@
+[
+  {
+    "modid": "BV",
+    "name": "BarrierVisibility",
+    "description": "",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "Timmi6790"
+    ],
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
